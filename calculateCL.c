@@ -123,7 +123,7 @@ int* calculateCL(float* vectorData, int vectorCount, int device_type) {
 
     /* Create data buffer */
     
-    global_size = 8; //was number of work groups
+    global_size = 8 * 10240; //was number of work groups
     local_size = (device_type == CL_DEVICE_TYPE_GPU ? 4 : 1);
     num_groups = global_size / local_size;
     input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |

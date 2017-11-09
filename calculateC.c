@@ -12,16 +12,16 @@ int* calculateC(float* vectorData, int vectorCount) {
     int* result = malloc(vectorCount * sizeof(int));
     for(int me = 0; me < vectorCount; me++) {
 
-        float myX = vectorData[me * 3];
-        float myY = vectorData[me * 3 + 1];
-        float myRadius = vectorData[me * 3 + 2];
+        float myX = vectorData[me * 4];
+        float myY = vectorData[me * 4 + 1];
+        float myRadius = vectorData[me * 4 + 2];
         int collidedIndex = 0;
 
         for(int you = 0; you < vectorCount; you++) {
             if (me != you) {
-                float yourX = vectorData[you * 3];
-                float yourY = vectorData[you * 3 + 1];
-                float yourRadius = vectorData[you * 3 + 2];
+                float yourX = vectorData[you * 4];
+                float yourY = vectorData[you * 4 + 1];
+                float yourRadius = vectorData[you * 4 + 2];
 
                 if (sqrtf((yourX - myX) * (yourX - myX) + (yourY - myY) * (yourY - myY)) <= (yourRadius + myRadius)) {
                     result[me] = you;

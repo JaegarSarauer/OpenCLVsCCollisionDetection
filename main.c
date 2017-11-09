@@ -18,12 +18,13 @@ float timedifference_msec(struct timeval t0, struct timeval t1)
 
 int main(int argc, char** args) {
     srand(123);
-    const int NUMOFPEOPLE = 16;
+    const int increase = 10240;
+    const int NUMOFPEOPLE = 16 * increase;
     const int DATA_SIZE = 4;
     float* vectorData = malloc(NUMOFPEOPLE * DATA_SIZE * sizeof(float));
     for(int i = 0; i < NUMOFPEOPLE; i++) {
-        vectorData[(i * DATA_SIZE)] = rand() % 50;
-        vectorData[(i * DATA_SIZE) + 1] = rand() % 50;
+        vectorData[(i * DATA_SIZE)] = rand() % 500;
+        vectorData[(i * DATA_SIZE) + 1] = rand() % 500;
         vectorData[(i * DATA_SIZE) + 2] = rand() % 3 + 0.5f;
         vectorData[(i * DATA_SIZE) + 3] = 0;
     }
@@ -35,7 +36,7 @@ int main(int argc, char** args) {
     struct timeval afterCPUGPU;
     gettimeofday(&startTime, 0);
  
-    int* result = 0;//calculateC(vectorData, NUMOFPEOPLE);
+    int* result = calculateC(vectorData, NUMOFPEOPLE);
     gettimeofday(&afterC, 0);
 
     //Test doing it via OpenCL CPU
@@ -56,8 +57,8 @@ int main(int argc, char** args) {
     printf("GL GPU Timer: %fms\n", timedifference_msec(afterGPU, afterCPU)); 
     printf("GL CPU+GPU Timer: %fms\n", timedifference_msec(afterCPUGPU, afterGPU));
 
-    for (int i = 0; i < NUMOFPEOPLE; i++)
-        printf("X: %f\t Y: %f\t Radius: %f\t Nothing: %f\t RESULT: %d\n", vectorData[i * DATA_SIZE], vectorData[(i * DATA_SIZE) + 1], vectorData[(i * DATA_SIZE) + 2], vectorData[(i * DATA_SIZE) + 3], result2[i]);
+    //for (int i = 0; i < NUMOFPEOPLE; i++)
+    //    printf("X: %f\t Y: %f\t Radius: %f\t Nothing: %f\t RESULT: %d\n", vectorData[i * DATA_SIZE], vectorData[(i * DATA_SIZE) + 1], vectorData[(i * DATA_SIZE) + 2], vectorData[(i * DATA_SIZE) + 3], result2[i]);
 
     free(vectorData);
     free(result);
