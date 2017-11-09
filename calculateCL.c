@@ -15,7 +15,7 @@
 #endif
 
 /* Find a GPU or CPU associated with the first available platform */
-cl_device_id create_device() {
+cl_device_id create_device(int device_type) {
 
     cl_platform_id platform;
     cl_device_id dev;
@@ -29,8 +29,9 @@ cl_device_id create_device() {
     }
 
     /* Access a device */
-    err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &dev, NULL);
+    err = clGetDeviceIDs(platform, device_type, 1, &dev, NULL);
     if(err == CL_DEVICE_NOT_FOUND) {
+        perror("Could not load main device. Using CPU.");
         err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 1, &dev, NULL);
     }
     if(err < 0) {
@@ -93,26 +94,25 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 }
 
 //
-int* calculateCL(float* vectorData, int vectorCount) {
+int* calculateCL(float* vectorData, int vectorCount, int device_type) {
     /* OpenCL structures */
     cl_device_id device;
     cl_context context;
     cl_program program;
     cl_kernel kernel;
     cl_command_queue queue;
-    cl_int i, j, err;
+    cl_int err;
     size_t local_size, global_size;
-
 
     /* Data and buffers */
     int result[vectorCount];
-    printf("\n%d\n", CL_KERNEL_WORK_GROUP_SIZE);
+    //printf("\n%d\n", CL_KERNEL_WORK_GROUP_SIZE);
 
     cl_mem input_buffer, result_buffer;
     cl_int num_groups;
 
     /* Create device and context */
-    device = create_device();
+    device = create_device(device_type);
     context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
     if(err < 0) {
         perror("Couldn't create a context");
@@ -123,11 +123,11 @@ int* calculateCL(float* vectorData, int vectorCount) {
 
     /* Create data buffer */
     
-    global_size = vectorCount; //was number of work groups
-    local_size = 4000;
+    global_size = 8; //was number of work groups
+    local_size = (device_type == CL_DEVICE_TYPE_GPU ? 4 : 1);
     num_groups = global_size / local_size;
     input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
-                                  CL_MEM_COPY_HOST_PTR, vectorCount * 3 * sizeof(float), vectorData, &err);
+                                  CL_MEM_COPY_HOST_PTR, vectorCount * 4 * sizeof(float), vectorData, &err);
     result_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
                                   CL_MEM_COPY_HOST_PTR, vectorCount * sizeof(int), result, &err);
     if(err < 0) {
@@ -158,14 +158,13 @@ int* calculateCL(float* vectorData, int vectorCount) {
     }
 
     /* Enqueue kernel */
-    printf("TotalItems:%d ItemsPerGroup:%d NumOfGroups:%d", global_size, local_size, num_groups);
+    //printf("TotalItems:%d ItemsPerGroup:%d NumOfGroups:%d", global_size, local_size, num_groups);
     err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size,
                                  &local_size, 0, NULL, NULL);
     if(err < 0) {
         printf("Couldn't enqueue the kernel: %d", err);
         return NULL;
     }
-
 
     /* Read the kernel's output */
     err = clEnqueueReadBuffer(queue, result_buffer, CL_TRUE, 0,
@@ -174,6 +173,8 @@ int* calculateCL(float* vectorData, int vectorCount) {
         printf("Couldn't read the buffer: %d", err);
         return NULL;
     }
+    
+    
 
     /* Deallocate resources */
     clReleaseKernel(kernel);
@@ -186,7 +187,6 @@ int* calculateCL(float* vectorData, int vectorCount) {
     int* resultScore = malloc(vectorCount * sizeof(int));
 
     for(int i = 0; i < vectorCount; i++) {
-        printf(result[i]);
         resultScore[i] = result[i];
     }
 

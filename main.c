@@ -2,37 +2,66 @@
 #include <stdlib.h>
 #include "calculateC.h"
 #include "calculateCL.h"
+#include <sys/time.h>
+
+#ifdef MAC
+#include <OpenCL/cl.h>
+#else
+#include <CL/cl.h>
+#endif
+
+
+float timedifference_msec(struct timeval t0, struct timeval t1)
+{
+    return (t0.tv_sec - t1.tv_sec) * 1000.0f + (t0.tv_usec - t1.tv_usec) / 1000.0f;
+}
 
 int main(int argc, char** args) {
     srand(123);
-    const int NUMOFPEOPLE = 40000;
-    float* vectorData = malloc(NUMOFPEOPLE * 3 * sizeof(float));
+    const int NUMOFPEOPLE = 16;
+    const int DATA_SIZE = 4;
+    float* vectorData = malloc(NUMOFPEOPLE * DATA_SIZE * sizeof(float));
     for(int i = 0; i < NUMOFPEOPLE; i++) {
-        vectorData[i * 3] = rand() % 50;
-        vectorData[i * 3 + 1] = rand() % 50;
-        vectorData[i * 3 + 2] = rand() % 3 + 0.5f;
+        vectorData[(i * DATA_SIZE)] = rand() % 50;
+        vectorData[(i * DATA_SIZE) + 1] = rand() % 50;
+        vectorData[(i * DATA_SIZE) + 2] = rand() % 3 + 0.5f;
+        vectorData[(i * DATA_SIZE) + 3] = 0;
     }
 
-    unsigned long startTime = time(NULL);
+    struct timeval startTime;
+    struct timeval afterC;
+    struct timeval afterCPU;
+    struct timeval afterGPU;
+    struct timeval afterCPUGPU;
+    gettimeofday(&startTime, 0);
  
-    int* result = calculateC(vectorData, NUMOFPEOPLE);
-    unsigned long afterC = time(NULL);
-    int* result2 = calculateCL(vectorData, NUMOFPEOPLE);
-    //Test doing it via OpenCL CPU
-    unsigned long afterCPU = time(NULL);
-    //Test doing it via OpenGL GPU
-    unsigned long afterGPU = time(NULL);
-    //Test doing it via OpenGL CPU+GPU
-    unsigned long afterCPUGPU = time(NULL);
-    printf("%lu %lu\n", startTime, afterC);
-    printf("C Timer: %lu\n", afterC - startTime); 
-    printf("GL CPU Timer: %lu\n", afterCPU - afterC); 
-    printf("GL GPU Timer: %lu\n", afterGPU - afterCPU); 
-    printf("GL CPU+GPU Timer: %lu\n", afterCPUGPU - afterGPU);
+    int* result = 0;//calculateC(vectorData, NUMOFPEOPLE);
+    gettimeofday(&afterC, 0);
 
-    printf("%d", result2[1]);
+    //Test doing it via OpenCL CPU
+    int* result2 = calculateCL(vectorData, NUMOFPEOPLE, CL_DEVICE_TYPE_CPU);
+    gettimeofday(&afterCPU, 0);
+
+    //Test doing it via OpenGL GPU
+    int* result3 = calculateCL(vectorData, NUMOFPEOPLE, CL_DEVICE_TYPE_GPU);
+    gettimeofday(&afterGPU, 0);
+
+    //Test doing it via OpenGL CPU+GPU
+    int* result4 = calculateCL(vectorData, NUMOFPEOPLE, CL_DEVICE_TYPE_ALL);
+    gettimeofday(&afterCPUGPU, 0);
+
+    //printf("%lu %lu\n", startTime, afterC);
+    printf("C Timer: %fms\n", timedifference_msec(afterC, startTime)); 
+    printf("GL CPU Timer: %fms\n", timedifference_msec(afterCPU, afterC)); 
+    printf("GL GPU Timer: %fms\n", timedifference_msec(afterGPU, afterCPU)); 
+    printf("GL CPU+GPU Timer: %fms\n", timedifference_msec(afterCPUGPU, afterGPU));
+
+    for (int i = 0; i < NUMOFPEOPLE; i++)
+        printf("X: %f\t Y: %f\t Radius: %f\t Nothing: %f\t RESULT: %d\n", vectorData[i * DATA_SIZE], vectorData[(i * DATA_SIZE) + 1], vectorData[(i * DATA_SIZE) + 2], vectorData[(i * DATA_SIZE) + 3], result2[i]);
 
     free(vectorData);
     free(result);
     free(result2);
+    free(result3);
+    free(result4);
 }

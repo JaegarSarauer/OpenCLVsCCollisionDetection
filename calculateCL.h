@@ -3,6 +3,6 @@
 
 #include <stdio.h>
 
-int* calculateCL(float* vectorData, int vectorCount);
+int* calculateCL(float* vectorData, int vectorCount, int device_type);
 
 #endif /* calculateCL_h */
