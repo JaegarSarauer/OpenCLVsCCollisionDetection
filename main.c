@@ -18,8 +18,7 @@ float timedifference_msec(struct timeval t0, struct timeval t1)
 
 int main(int argc, char** args) {
     srand(123);
-    const int increase = 10240;
-    const int NUMOFPEOPLE = 16 * increase;
+    const int NUMOFPEOPLE = 65536;
     const int DATA_SIZE = 4;
     float* vectorData = malloc(NUMOFPEOPLE * DATA_SIZE * sizeof(float));
     for(int i = 0; i < NUMOFPEOPLE; i++) {
@@ -56,9 +55,6 @@ int main(int argc, char** args) {
     printf("GL CPU Timer: %fms\n", timedifference_msec(afterCPU, afterC)); 
     printf("GL GPU Timer: %fms\n", timedifference_msec(afterGPU, afterCPU)); 
     printf("GL CPU+GPU Timer: %fms\n", timedifference_msec(afterCPUGPU, afterGPU));
-
-    //for (int i = 0; i < NUMOFPEOPLE; i++)
-    //    printf("X: %f\t Y: %f\t Radius: %f\t Nothing: %f\t RESULT: %d\n", vectorData[i * DATA_SIZE], vectorData[(i * DATA_SIZE) + 1], vectorData[(i * DATA_SIZE) + 2], vectorData[(i * DATA_SIZE) + 3], result2[i]);
 
     free(vectorData);
     free(result);
