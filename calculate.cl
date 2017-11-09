@@ -10,8 +10,8 @@ __kernel void calculate(__global float4* data,
             
             group_result[global_addr + i] = -1;
 
-            for(uint j = 0; j < get_global_size(0); j++) {
-                if (get_local_id(0) + i != j) {
+            for(uint j = 0; j < get_global_size(0) * 2; j++) {
+                if (global_addr + i != j) {
                     float4 you = data[j];
 
                     if (sqrt((you.x - me.x) * (you.x - me.x) + (you.y - me.y) * (you.y - me.y)) <= (you.z + me.z)) {
